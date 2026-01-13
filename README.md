@@ -19,6 +19,36 @@ If variables are not set, the Worker does nothing.
 
 ---
 
+## Bot whitelist (SEO & AI safe)
+
+The Worker **does not redirect** search engine bots and AI crawlers.
+This prevents SEO issues and allows AI systems to index original content.
+
+### Default whitelisted bots
+
+Included by default (no configuration required):
+
+- **Google**: googlebot, google-inspectiontool, google-site-verification
+- **Bing / Microsoft**: bingbot, adidxbot
+- **OpenAI / ChatGPT**: gptbot, chatgpt, openai
+- **Google Gemini / DeepMind**: gemini, google-extended
+- **Anthropic (Claude)**: claudebot, anthropic
+- **Common AI crawlers**: ai, llm, crawler
+
+### Custom whitelist (optional)
+
+You can override the default whitelist by adding a Worker Variable:
+
+```text
+WHITELIST_USER_AGENTS = ["googlebot","bingbot","gptbot","perplexitybot"]
+```
+
+- Type: **Text**
+- Value must be a valid JSON array
+- If set, this list **replaces** the default whitelist
+
+---
+
 ## Deploy via Cloudflare Dashboard (recommended)
 
 1. Workers & Pages → Create application → Worker
