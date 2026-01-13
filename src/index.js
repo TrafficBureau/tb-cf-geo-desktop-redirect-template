@@ -41,6 +41,19 @@ function isHtmlNavigation(req) {
   );
 }
 
+function isUserAgentWhitelisted(userAgent, whitelist) {
+  if (!userAgent) return false;
+  if (!Array.isArray(whitelist) || whitelist.length === 0) return false;
+
+  const source = userAgent.toLowerCase();
+  return whitelist.some((entry) => {
+    if (typeof entry !== "string") return false;
+    const needle = entry.trim().toLowerCase();
+    if (!needle) return false;
+    return source.includes(needle);
+  });
+}
+
 export default {
   async fetch(request, env) {
     const TARGET_COUNTRY = (env.TARGET_COUNTRY || "").toUpperCase();
@@ -49,6 +62,52 @@ export default {
 
     // If not configured — do nothing
     if (!TARGET_COUNTRY || !TARGET_URL) {
+      return fetch(request);
+    }
+
+    // Bot whitelist (no redirect for these user agents)
+    // Customizable via env.WHITELIST_USER_AGENTS as JSON array string, e.g. '["googlebot","bingbot"]'
+    const defaultWhitelist = [
+      // Google
+      "googlebot",
+      "google-inspectiontool",
+      "google-site-verification",
+
+      // Bing / Microsoft
+      "bingbot",
+      "adidxbot",
+
+      // OpenAI / ChatGPT
+      "gptbot",
+      "chatgpt",
+      "openai",
+
+      // Google Gemini / DeepMind
+      "gemini",
+      "google-extended",
+
+      // Anthropic
+      "claudebot",
+      "anthropic",
+
+      // Common AI / LLM crawlers
+      "ai",
+      "llm",
+      "crawler"
+    ];
+
+    let whitelist = defaultWhitelist;
+    if (typeof env.WHITELIST_USER_AGENTS === "string" && env.WHITELIST_USER_AGENTS.trim() !== "") {
+      try {
+        const parsed = JSON.parse(env.WHITELIST_USER_AGENTS);
+        if (Array.isArray(parsed)) whitelist = parsed;
+      } catch {
+        // ignore invalid JSON and fall back to defaults
+      }
+    }
+
+    const userAgent = request.headers.get("user-agent") || "";
+    if (isUserAgentWhitelisted(userAgent, whitelist)) {
       return fetch(request);
     }
 
